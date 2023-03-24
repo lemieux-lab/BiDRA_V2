@@ -80,7 +80,7 @@ end
 
 
 ### Views renderer
-@page("/", "views/app")
+@page("/", "views/app.jl.html")
 
 ## Return true or launch server 
 Server.isrunning() || Server.up()
