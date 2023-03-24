@@ -1,4 +1,4 @@
-using GenieFramework
+using GenieFramework, HTTP
 using CSV, DataFrames
 @genietools
 
@@ -73,13 +73,14 @@ route("/", method = POST) do
 
   println("--- DONE")
   
-  #"Hello $(Genie.Requests.postpayload(:resp, "Anon"))"
+  ## Return file download
+  HTTP.Response(200, ["Content-Type" => "application/zip"],body = read("app/test.zip"))
 end
 
 
 
 ### Views renderer
-@page("/", "views/app.jl.html")
+@page("/", "views/app")
 
 ## Return true or launch server 
 Server.isrunning() || Server.up()
