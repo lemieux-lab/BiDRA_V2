@@ -39,6 +39,7 @@ end
 
 ## When a new analysis is requested
 route("/", method = POST) do
+  println(getUniqueID)
   responseType = Genie.Requests.postpayload(:resp)
   
   #uniqueID = "0203451612" ## For development purposes
@@ -67,14 +68,19 @@ route("/", method = POST) do
 
     chrono = @elapsed plotDoseResponse(subsetData, posterior, subsetId);
     println("--------- Inference Plotted ($chrono sec.)")
-
-    
+ 
   end
 
   println("--- DONE")
   
   ## Return file download
-  HTTP.Response(200, ["Content-Type" => "application/zip"],body = read("app/test.zip"))
+  getPwd = pwd()
+  cd(ANALYSIS_PATH)
+  
+  chrono = @elapsed fn = createZip(uniqueID, getPwd)
+  println("--- Analysis ZIP created ($chrono sec.)")
+
+  HTTP.Response(200, ["Content-Type" => "application/zip"], body = read(ANALYSIS_PATH*fn))
 end
 
 

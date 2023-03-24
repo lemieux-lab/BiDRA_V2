@@ -1,36 +1,64 @@
-<h1>BiDRA Dashboard</h1>
-<header class="st-header q-pa-sm">
-    <h1 class="st-header__title text-h3">Infer and Analyze Effeciency Metrics</h1>
-</header>
-<div class="row">
-    <div class="col col-4">
-        <div class="row">
-            <h3 class="st-header__title text-h3">Upload your dataset</h3>
-        </div>
-        <div class="row">
-            $(uploader(label="Select CSV", accept=".csv", multiple=false, method="POST", url="/upload", field__name="dataset"))
-        </div>
-        <div class="row">
-            <p>Add specifications on dataset format</p>
-        </div>
-             
+<html>
+    <head>
+        <title> BiDRA V2.0 </title>
+    </head>
 
-        <form action="/" method="POST" enctype="multipart/form-data">
-            <div class="row">
-                <h3 class="st-header__title text-h3">Select your response type</h3>
+    <body>
+        <div class="modal" id="myModal" role="dialog">
+            <div class="modal-dialog">
+                  <!-- Modal content-->
+                 <div class="modal-content">
+                    <div class="modal-header">
+                          <h4 class="modal-title">Please Wait...</h4>
+                    </div>
+                
+                    <div class="modal-body">
+                          <center> <div class="loader"></div> </center>
+                    </div>
+                  </div>  
             </div>
-            <div class="row">
-                $(Stipple.select(name="resp", :responseSelected, options=:responseOption))
+        </div>
+
+        <h1>BiDRA Dashboard</h1>
+        <header class="st-header q-pa-sm">
+            <h1 class="st-header__title text-h3">Infer and Analyze Effeciency Metrics</h1>
+        </header>
+
+        <div class="row">
+            <div class="col col-4">
+                <div class="row">
+                    <h3 class="st-header__title text-h3">Upload your dataset</h3>
+                </div>
+                <div class="row">
+                    $(uploader(label="Select CSV", accept=".csv", multiple=false, method="POST", url="/upload", field__name="dataset"))
+                </div>
+                <div class="row">
+                    <p>Add specifications on dataset format</p>
+                </div>
+                    
+
+                <form action="/" method="POST" enctype="multipart/form-data">
+                    <div class="row">
+                        <h3 class="st-header__title text-h3">Select your response type</h3>
+                    </div>
+                    <div class="row">
+                        $(Stipple.select(name="resp", :responseSelected, options=:responseOption))
+                    </div>
+                    <div class="row">
+                        <p>Add specifications on response type</p>
+                    </div>
+                    <div class="row">
+                        $(btn(label="Analyze", color="secondary", type="submit"))
+                    </div>
+                </form>
             </div>
-            <div class="row">
-                <p>Add specifications on response type</p>
+            <div class="col  col-6">
+                <p>Explain results return</p>
             </div>
-            <div class="row">
-                $(btn(label="Analyze", color="secondary", type="submit"))
-            </div>
-        </form>
-    </div>
-    <div class="col  col-6">
-        $(btn("Test download", color = "red", type = "a", href = "analysis/4803172112/posterior/posterior_expID_1.csv", icon = "map", iconright = "send"))
-    </div>
-</div>
+        </div>
+    </body>
+</html>
+
+
+    
+

@@ -2,6 +2,7 @@ using Turing, MCMCChains
 using Statistics, StatsBase
 using DataFrames, CSV
 using CairoMakie
+using ZipFile
 
 include("juPlot.jl")
 
@@ -105,8 +106,17 @@ function doInference(expData::DataFrame, id::String, responseType::String)
     return chainsCombined
 end
 
+function createZip(uniqueID::String, resetPwd::String)
+    writerName = "results_$uniqueID.zip"
+    cmmd = `zip -r $writerName $uniqueID/`
+    run(cmmd)
 
-function download(filepath::String; root)::HTTP.Response 
-    return serve_static_file(filepath; root=root, download=true) 
+    cd(resetPwd)
+    rm(FILE_PATH*"$uniqueID.csv")
+    println("--- Uploaded dataset deleted from server")
+
+    rm(dataset_path, recursive=true)
+    println("--- Analysis results dir deleted from server")
+    return writerName
 end 
 
