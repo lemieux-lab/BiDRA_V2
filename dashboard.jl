@@ -1,8 +1,9 @@
 using GenieFramework
 using CSV, DataFrames
-include("juBiDRA.jl")
-include("juPlot.jl")
 @genietools
+
+include("juBiDRA.jl") ## utils functions
+include("juPlot.jl") ## plotting functions
 
 Genie.config.cors_headers["Access-Control-Allow-Origin"]  =  "*"
 Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type"
@@ -12,11 +13,10 @@ Genie.config.cors_allowed_origins = ["*"]
 const FILE_PATH = "upload/" ## Where to save user dataset (CSV)
 mkpath(FILE_PATH)
 
-const ANALYSIS_PATH = "analysis/"
+const ANALYSIS_PATH = "analysis/" ## Where analysis results are saved
 mkpath(ANALYSIS_PATH)
 
 @in responseSelected = "Ascending" ## Default selection of response tye
-@out title = "BiDRA Dashboard" ## Main title on the page
 @out responseOption = ["Ascending", "Descending"] ## Options of response typ for the user
 
 global uniqueID = "" ## Initiate
@@ -80,4 +80,6 @@ end
 
 ### Views renderer
 @page("/", "views/app.jl.html")
+
+## Return true or launch server 
 Server.isrunning() || Server.up()
