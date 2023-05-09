@@ -18,8 +18,9 @@ mkpath(ANALYSIS_PATH)
 
 @in responseSelected = "Ascending" ## Default selection of response tye
 @out responseOption = ["Ascending", "Descending"] ## Options of response typ for the user
-
+@out isprocess = false
 global uniqueID = "" ## Initiate
+
 
 ## When a new dataset is submitted
 route("/upload", method = POST) do
@@ -47,6 +48,7 @@ route("/", method = POST) do
   println("##### $uniqueID Analysis #####")
   global dataset_path = "$ANALYSIS_PATH$uniqueID/"
   mkpath(dataset_path)
+  println("$ANALYSIS_PATH$uniqueID/")
 
   chrono = @elapsed dataset = getDataset(uniqueID)
   datasetExp = groupby(dataset, :id)
@@ -72,6 +74,7 @@ route("/", method = POST) do
   end
 
   println("--- DONE")
+
   
   ## Return file download
   getPwd = pwd()
@@ -80,9 +83,10 @@ route("/", method = POST) do
   chrono = @elapsed fn = createZip(uniqueID, getPwd)
   println("--- Analysis ZIP created ($chrono sec.)")
 
+  @out isprocess = false
+
   HTTP.Response(200, ["Content-Type" => "application/zip"], body = read(ANALYSIS_PATH*fn))
 end
-
 
 
 ### Views renderer

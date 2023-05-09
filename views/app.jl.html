@@ -48,17 +48,18 @@
                         <p>Add specifications on response type</p>
                     </div>
                     <div class="row">
-                        $(btn(label="Analyze", color="secondary", type="submit"))
+                        $(btn(label="Analyze", color="secondary", type="submit", @click("isprocess = !isprocess")))
                     </div>
                 </form>
             </div>
             <div class="col  col-6">
+                $(h1("We are analyzing your dataset!", @showif(:isprocess)))
+                $(h3("This could take a few minutes: please don't reload or close your browser", @showif(:isprocess)))
+
                 <p>Explain results return</p>
+
+                $(btn(label="New Analysis", color="secondary", @click("isprocess=false")))
             </div>
         </div>
     </body>
 </html>
-
-
-    
-
