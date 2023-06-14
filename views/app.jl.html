@@ -4,21 +4,6 @@
     </head>
 
     <body>
-        <div class="modal" id="myModal" role="dialog">
-            <div class="modal-dialog">
-                  <!-- Modal content-->
-                 <div class="modal-content">
-                    <div class="modal-header">
-                          <h4 class="modal-title">Please Wait...</h4>
-                    </div>
-                
-                    <div class="modal-body">
-                          <center> <div class="loader"></div> </center>
-                    </div>
-                  </div>  
-            </div>
-        </div>
-
         <h1>BiDRA Dashboard</h1>
         <header class="st-header q-pa-sm">
             <h1 class="st-header__title text-h3">Infer and Analyze Effeciency Metrics</h1>
@@ -57,8 +42,6 @@
                 $(h3("This could take a few minutes: please don't reload or close your browser", @showif(:isprocess)))
 
                 <p>Explain results return</p>
-
-                $(btn(label="New Analysis", color="secondary", @click("isprocess=false")))
             </div>
         </div>
     </body>

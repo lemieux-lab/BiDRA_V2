@@ -41,7 +41,10 @@ end
 ## When a new analysis is requested
 route("/", method = POST) do
   println(getUniqueID)
-  responseType = Genie.Requests.postpayload(:resp)
+  responseType_in = Genie.Requests.postpayload(:resp)
+  ## 0 : Descending 
+  ## 1 : Ascending 
+  responseType = responseType_in == "Ascending" ? 1 : 0
   
   #uniqueID = "0203451612" ## For development purposes
   #responseType = "Descending" ## For development purposes
@@ -51,26 +54,55 @@ route("/", method = POST) do
   println("$ANALYSIS_PATH$uniqueID/")
 
   chrono = @elapsed dataset = getDataset(uniqueID)
-  datasetExp = groupby(dataset, :id)
+  #datasetExp = groupby(dataset, :id)
   println("--- Dataset uploaded ($chrono sec.)")
 
   expId = unique(dataset.id)
   N = length(expId)
   println("--- There are $N individual analysis to analyse")
 
+  SD_ALL = []
+  ΔWAICₖ_ALL = []
+  posterior_ALL = DataFrame()
+
   println("--- Starting inference ")
   for i in 1:N
     subsetId = expId[i];
     println("------ ($i) $subsetId")
 
-    subsetData = DataFrame(datasetExp[i]);
+    subsetDataset = filter(:id => x -> x == subsetId, dataset)
     chrono = @elapsed posterior = doInference(subsetData, subsetId, responseType);
+    posterior[!, :exp_id] = repeat([subsetId], size(posterior)[1])
+    posterior_ALL =  vcat(posterior_ALL, posterior)
     println("--------- Posterior Inferred ($chrono sec.)")
 
-
-    chrono = @elapsed plotDoseResponse(subsetData, posterior, subsetId);
+    chrono = @elapsed plotDoseResponse(subsetData, posterior, subsetId, responseType);
     println("--------- Inference Plotted ($chrono sec.)")
+
+    waicₖ_bidra, waicₖ_line = get_waicₖ(subsetData, posterior, responseType)
+    ΔWAICₖ = waicₖ_bidra - waicₖ_line
+    ΔWAICₖ_ALL = vcat(ΔWAICₖ_ALL, ΔWAICₖ)
+    SD_ALL = vcat(SD_ALL, std(subsetData.response))
+    println("--------- Metrics calculated")
  
+  end
+
+  dataset_metrics = DataFrame(exp_id=expId, SD=SD_ALL, ΔWAICₖ=ΔWAICₖ_ALL)
+  dataset_metrics[!, :completeness] = map(r -> r ≥ 20 ? 1 : 2, dataset_metrics.SD)
+  dataset_metrics[!, :WAICₖ_model] = map(r -> r < 0 ? 1 : 2, dataset_metrics.ΔWAICₖ)
+  dataset_metrics[!, :group] = dataset_metrics.WAICₖ_model .+ dataset_metrics.completeness .- 1
+
+  sort!(dataset_metrics, :group, rev=true)
+
+  chrono = @elapsed plotGroupAssignation(dataset_metrics);
+  println("--------- Group assignation (or posterior informative potentiel) plotted ($chrono sec.)")
+
+  if N ≥ 3
+    ## ranking
+  elseif  N == 2
+    ## comparison
+    chrono = @elapsed plotPairedComparison(posterior_ALL, expId)
+    println("--------- Pairs of posterior comparison plotted ($chrono sec.)")
   end
 
   println("--- DONE")
