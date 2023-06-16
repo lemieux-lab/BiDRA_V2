@@ -1,4 +1,3 @@
-using Statistics, StatsBase
 using CairoMakie
 
 function plotDoseResponse(subsetData::DataFrame, posterior::DataFrame, id::String, responseType::Int)  
@@ -37,7 +36,7 @@ function plotDoseResponse(subsetData::DataFrame, posterior::DataFrame, id::Strin
     vlines!(axic50, lineMed, color=:orange, label="Median $lineMed")
 
     if lineCI[2] > maximum(concentration)
-        vlines!(axic50, [minimum(concentration), maximum(concentration)], color=:black, label="Exp. dose range")
+        vlines(axic50, minimum(concentration), maximum(concentration), color=:black, label="Exp. dose range")
     end
     
     axislegend(axic50, position = :lt,)
@@ -81,19 +80,24 @@ function plotDoseResponse(subsetData::DataFrame, posterior::DataFrame, id::Strin
     hideydecorations!(axslope)
 
     ### σ posterior
-    lineMed = round(median(posterior.σ), digits=2)
-    lineCI = round.(percentile(posterior.σ, [2.5, 97.5]), digits=2)
+    lineMed = round(median(posterior.σᵦ), digits=2)
+    lineCI = round.(percentile(posterior.σᵦ, [2.5, 97.5]), digits=2)
 
     vspan!(axσ, lineCI[1], lineCI[2], color=(:pink, 0.3), label="95% C.I. σ\n$lineCI")
-    hist!(axσ, posterior.σ, bins=50, color=:black)
+    hist!(axσ, posterior.σᵦ, bins=50, color=:black)
     vlines!(axσ, lineMed, color=:pink, label="Median σ\n$lineMed")
 
     Legend(f[4, 4], axσ)
     hideydecorations!(axσ)
 
     ### Save Figure
+    doseResponse_path = dataset_path*"doseResponse/"
+    mkpath(doseResponse_path)
+    
     fn = "doseResponse_expID_$id"*".pdf"
     CairoMakie.save("$doseResponse_path$fn", f)
+    #fn = "doseResponse_expID_$id"*".png"
+    #CairoMakie.save("$mainPath/figure/$fn", f)
 end
 
 function plotGroupAssignation(dataset_metrics::DataFrame)
@@ -113,8 +117,9 @@ function plotGroupAssignation(dataset_metrics::DataFrame)
     hidedecorations!(ax)
     hidespines!(ax)
 
+    groupAssignation_path = dataset_path
     fn = "informative_potentiel_posterior"*".pdf"
-    CairoMakie.save("$ANALYSIS_PATH/$fn", f)
+    CairoMakie.save("$groupAssignation_path$fn", f)
 end
 
 function plotPairedComparison(posterior::DataFrame, expId::Vector{String})
@@ -140,105 +145,15 @@ function plotPairedComparison(posterior::DataFrame, expId::Vector{String})
         return ax_up, ax_low
     end
 
-    f = Figure(backgroundcolor="transparent", resolution=(300*5, 600))
+    f = Figure(backgroundcolor="white", resolution=(300*5, 600))
 
     axA_1, axA_2 = plotCol(1, :ic50)
     axB_1, axB_2 = plotCol(2, :HDR)
     axC_1, axC_2 = plotCol(3, :LDR)
     axD_1, axD_2 = plotCol(4, :slope)
-    axE_1, axE_2 = plotCol(5, :σ)
+    axE_1, axE_2 = plotCol(5, :σᵦ)
 
+    pairedComp_path = dataset_path
     fn = "posterior_comparison"*".pdf"
-    CairoMakie.save("$ANALYSIS_PATH/$fn", f)
-end
-
-function plotRanking(sorted_rank_matrix::Matrix{Float64}, posterior::DataFrame, sorted_expId::Vector, expId::Vector{String}, N::Int, n_samples::Int, paramRank::Int)
-    function getPosteriorBinRange(posterior::DataFrame, pr::Symbol, pr_bins::Vector, expId_order::Vector, N::Int, n_samples::Int)
-        ## Matrix of posterior samplings (sampling x compound)
-        posterior_mtx = reshape(posterior[:, pr], (n_samples, N))
-      
-        ## Calcute histogram binning (bins x compound)
-        hist_mtx = mapreduce(c -> fit(Histogram, c, pr_bins).weights, hcat, eachcol(posterior_mtx))
-      
-        ## Sort by ranking order 
-        hist_sorted = hist_mtx[:, expId_order]
-        return hist_sorted
-    end
-      
-    w = N*10 + (400*2)
-    h = N*30 + 60
-
-    ## info for posterior representations
-    eff_metrics = [:ic50, :HDR]
-    minIC50, maxIC50 = percentile(posterior.ic50, [2.5, 97.5])#extrema(posterior.ic50)
-    minHDR, maxHDR = percentile(posterior.HDR, [2.5, 97.5])#extrema(posterior.HDR)
-    bins_range = [collect(floor(minIC50):0.1:ceil(maxIC50)), collect(floor(minHDR):1:ceil(maxHDR))]
-
-    binRange_ic50 = getPosteriorBinRange(posterior, eff_metrics[1], bins_range[1], sorted_expId, N, n_samples)
-    binRange_hdr = getPosteriorBinRange(posterior, eff_metrics[2], bins_range[2], sorted_expId, N, n_samples)
-
-    xticksIC50 = range(1, length(bins_range[1]), 4)
-    xticksHDR = range(1, length(bins_range[2]), 4)
-
-    if paramRank == 0
-        PARAM = "IC50"
-    elseif paramRank == 1
-        PARAM = "HDR"
-    end
-      
-    f = Figure(backgroundcolor="transparent", resolution=(w, h));
-    ax = Axis(f[1, 1], xlabel="$PARAM Ranks", xticks=(1:5:N, string.(1:5:N)), yticks=(1:N, expId[sorted_expId]))
-      
-    hm = CairoMakie.heatmap!(ax, sorted_rank_matrix, colormap=["gray95", "gray35", "black"])
-    Colorbar(f[2, 1], hm, label = "Rank Prob.", vertical = false, flipaxis = false)
-      
-    axIc50 = Axis(f[1, 2], xlabel="IC50 posterior", xticks=(xticksIC50, string.(bins_range[1][Int.(round.(collect(xticksIC50)))])))
-    hm = CairoMakie.heatmap!(axIc50, binRange_ic50, colormap=["gray95", "gray35", "black"])
-    hideydecorations!(axIc50)
-    Colorbar(f[2, 2], hm, label="Rank Prob.", vertical = false, flipaxis = false)
-      
-    axHDR = Axis(f[1, 3], xlabel="HDR posterior", xticks=(xticksHDR, string.(bins_range[2][Int.(round.(collect(xticksHDR)))])))
-    hm = CairoMakie.heatmap!(axHDR, binRange_hdr, colormap=["gray95", "gray35", "black"])
-    Colorbar(f[2, 3], hm, label="Count", vertical = false, flipaxis = false)
-    hideydecorations!(axHDR)
-      
-    colsize!(f.layout, 1, Relative(2/3))
-    linkyaxes!(ax, axIc50, axHDR)
-
-    fn = "$(PARAM)_rankings"*".pdf"
-    CairoMakie.save("$ANALYSIS_PATH/$fn", f)
-end
-
-function plotPairWiseParameters(posterior::DataFrame)
-    f = Figure(backgroundcolor="transparent", resolution=(300*3, 300*3))
-    axA = Axis(f[1, 1], xlabel="IC₅₀", ylabel="HDR")
-    axB = Axis(f[2, 1], xlabel="IC₅₀", ylabel="Slope")
-    axC = Axis(f[3, 1], xlabel="IC₅₀", ylabel="LDR")
-    axD = Axis(f[2, 2], xlabel="HDR", ylabel="Slope")
-    axE = Axis(f[3, 2], xlabel="HDR", ylabel="LDR")
-    axF = Axis(f[3, 3], xlabel="Slope", ylabel="LDR")
-
-    scatter!(axA, posterior.ic50, posterior.HDR, color=(:blue, 0.1))
-    scatter!(axA, sort(posterior.ic50), sort(posterior.HDR), color=(:black, 0.1))
-    scatter!(axB, posterior.ic50, posterior.slope, color=(:blue, 0.1))
-    scatter!(axB, sort(posterior.ic50), sort(posterior.slope), color=(:black, 0.1))
-    scatter!(axC, posterior.ic50, posterior.LDR, color=(:blue, 0.1))
-    scatter!(axC, sort(posterior.ic50), sort(posterior.LDR), color=(:black, 0.1))
-    scatter!(axD, posterior.HDR, posterior.slope, color=(:blue, 0.1))
-    scatter!(axD, sort(posterior.HDR), sort(posterior.slope), color=(:black, 0.1))
-    scatter!(axE, posterior.HDR, posterior.LDR, color=(:blue, 0.1))
-    scatter!(axE, sort(posterior.HDR), sort(posterior.LDR), color=(:black, 0.1))
-    scatter!(axF, posterior.slope, posterior.LDR, color=(:blue, 0.1))
-    scatter!(axF, sort(posterior.slope), sort(posterior.LDR), color=(:black, 0.1))
-
-    linkxaxes!(axA, axB, axC)
-    linkxaxes!(axD, axE)
-    linkyaxes!(axB, axD)
-    linkyaxes!(axC, axE, axF)
-
-    hidexdecorations!(axA, grid=false)
-    hidexdecorations!(axB, grid=false)
-    hidedecorations!(axD, greid=false)
-    hideydecorations!(axE, grid=false)
-    hideydecorations!(axF, grid=false)
+    CairoMakie.save("$pairedComp_path$fn", f)
 end
