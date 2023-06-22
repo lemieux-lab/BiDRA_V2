@@ -1,3 +1,4 @@
+using Genie
 using Stipple, Stipple.ReactiveTools
 using StippleUI
 using HTTP
@@ -12,6 +13,7 @@ const RESULTS_PATH = create_storage_dir("Analysis_Results")
 
 @app begin
   @in process = false
+  #@in uniqueID = ""
 
   @out load = false
   @out output1 = "" ## response type selected by user
@@ -31,6 +33,8 @@ const RESULTS_PATH = create_storage_dir("Analysis_Results")
   
     output1 = select 
     output2 = uniqueID 
+
+    println(Genie.Requests.postpayload())
 
     ### BiDRA Analysis process
     ## Define ResponseType + reload dataset
@@ -103,7 +107,7 @@ end
 
 function ui()
   row(cell(class = "st-module", [
-    uploader(label="Upload Dataset", accept=".csv", multiple=false, method="POST", url="/upload", field__name="csv_file", autoupload=true)
+    uploader(name="fileUpload", label="Upload Dataset", accept=".csv", multiple=false, method="POST", url="/upload", fieldname="csv_file", autoupload=true)
 
     Stipple.select(:select, name="selectedResponse", options=:option,)
 
@@ -127,16 +131,16 @@ end
 route("/upload", method = POST) do
     files = Genie.Requests.filespayload()
     for f in files
-        global uniqueID = getUniqueID()
-        global experimentName = split(f[2].name, ".")[1]
+      global uniqueID = getUniqueID()
 
-        write(joinpath(UPLOAD_PATH, "$uniqueID.csv"), f[2].data)
-        @info "Uploading: " * f[2].name
+      write(joinpath(UPLOAD_PATH, "$uniqueID.csv"), f[2].data)
+      @info "Uploading: " * f[2].name
     end
+
     if length(files) == 0
-        @info "No file uploaded"
+      @info "No file uploaded"
     end
-    return "upload done"
+    return uniqueID
 end
 
 Genie.isrunning(:webserver) || up()

@@ -1,0 +1,22 @@
+name = "BiDRADashboardV2"
+uuid = "d32f8226-1c44-4995-a371-3a60850a98d0"
+authors = ["labellca <labellca@videotron.ca>"]
+version = "0.1.0"
+
+[deps]
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
+Genie = "c43c736e-a2d1-11e8-161f-af95117fbd1e"
+GenieSession = "03cc5b98-4f21-4eb6-99f2-22eced81f962"
+HTTP = "cd3eb016-35fb-5094-929b-558a96fad6f3"
+Inflector = "6d011eab-0732-4556-8808-e463c76bf3b6"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+MCMCChains = "c7f686f2-ff18-58e9-bc7b-31028e88f75d"
+Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+Stipple = "4acbeb90-81a0-11ea-1966-bdaff8155998"
+StippleUI = "a3c5d34a-b254-4859-a8fa-b86abb7e84a3"
+Turing = "fce5fe82-541a-59a6-adf8-730c64b5f9a0"
+ZipFile = "a5390f91-8eb1-5f08-bee0-b1d1ffed6cea"
