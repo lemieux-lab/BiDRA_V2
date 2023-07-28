@@ -70,7 +70,7 @@ route("/", method = POST) do
     subsetId = expId[i];
     println("------ ($i) $subsetId")
 
-    subsetDataset = filter(:id => x -> x == subsetId, dataset)
+    subsetData = filter(:id => x -> x == subsetId, dataset)
     chrono = @elapsed posterior = doInference(subsetData, subsetId, responseType);
     posterior[!, :exp_id] = repeat([subsetId], size(posterior)[1])
     posterior_ALL =  vcat(posterior_ALL, posterior)
