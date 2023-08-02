@@ -195,7 +195,7 @@ function createZip(uniqueID::String, resetPwd::String, UPLOAD_PATH::String, ANAL
   println("--- Uploaded dataset deleted from server")
 
   println(ANALYSIS_PATH)
-  #rm("$ANALYSIS_PATH/", recursive=true)
+  rm("$ANALYSIS_PATH/", recursive=true)
   println("--- Analysis results dir deleted from server")
   return writerName
 end

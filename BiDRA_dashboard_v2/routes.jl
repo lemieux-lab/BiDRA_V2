@@ -22,44 +22,109 @@ const RESULTS_PATH = create_storage_dir("Analysis_Results")
   @out inputID = getUniqueID()
 
   @in select = "Ascending"
-  @in option = ["Ascending", "Descending"]
+  @out option = ["Ascending", "Descending"]
 
   @out output1 = ""
   @out output2 = ""
+  @out load=false
+
+  @in resultSelect = "DR Curve Ascending"
+  @out resultOption = ["DR Curve Ascending", "DR Curve Descending", "DR Curve Incomplete", "DR Curve Unresponsive", "IC50 Ranks Probabilities", "Pairwise Comparison", "Informative Potentiel Flags"]
+  @out url = "img/dr_curve_ascending.png"
+  
+
+  @onchange resultSelect begin
+    url = "img/" * lowercase(replace(resultSelect, " " => "_")) * ".png"
+  end
 
   @onbutton process begin
-
-    load = true
-
+    load=true
     output1 = select 
     output2 = "Your DR experiments are beeing analyzed. Once the analysis process is completed, the results will be automatically downloaded. Thank you for your patience!"
   end
 end
 
 function ui(uniqueID)
-  row(cell(class = "st-module", [
-    uploader(name="fileUpload", label="Upload Dataset", accept=".csv", multiple=false, method="POST", url="/upload/$uniqueID", autoupload=true)
+  [
+    heading("BiDRA Dashboard")
 
-    StippleUI.form(action = "/analysis/$uniqueID", method = "POST", [
-      Stipple.select(:select, name="selectedResponse", options=:option,)
+    row([
+      cell(class="st-module", [
+        row([
+          cell(class="st-br", style="padding:20px", [
+            h4("Upload your dataset")
+            
+            uploader(name="fileUpload", label="Upload Dataset (.csv)", accept=".csv", multiple=false, method="POST", url="/upload/$uniqueID", autoupload=true)
+      
+            p("You must upload a single CSV file. Your dataset must be seperated in three columns, in this order: (1) log10 Dose, (2) Normalized % responses, and (3) experiments IDs.")
+            
+            p("The IDs are specific to each DR experiments and should be specified even if you are analyzing a single experiment. The IDs are used to seperate your datasets by eperiments and to identify them in the various graphical representations returned.")
 
-      btn("Analyze", type="submit", color="primary", @click(:process))
+            h4("Dataset example")
+
+            p("Here an example of a dataset that comprises 10 DR experiments with descending responses.")
+            StippleUI.form(action = "/download/datasetExample", method = "POST", [
+              btn("Download", type="submit", color="primary")
+            ])
+
+          ])
+
+          cell(class="st-br", style="padding:20px", [
+            StippleUI.form(action = "/analysis/$uniqueID", method = "POST", [
+              h4("Select your response type")
+
+              Stipple.select(:select, name="selectedResponse", options=:option,)
+
+              p("Ascending response: no response at small concentration and high response at large concentrations.(e.g. % of cell growth inhibition)")
+
+              p("Descending response: high response at small concentration and no response at small concentrations (e.g. % of cell survival)")
+              
+              h4("Start the analysis process")
+              btn("Analyze", type="submit", color="green", @click(:process), disable=:load)
+
+              h5("{{ output2 }}")
+              h4("{{ output3 }}")
+            ])
+          ])
+
+          cell(class="st-br", style="padding:20px", [
+            h4("Analysis Information")
+            p("Unique ID: $uniqueID")
+            p("Response Type: {{ output1 }}")
+
+            StippleUI.form(action="/", [
+              btn("New Analysis", type="submit", color="orange")
+            ])
+          ])
+        ])
+      ])
     ])
 
-    card(class = "q-my-md", [
-      card_section(h2("Analysis Information"))
-      card_section(["Unique ID: ", uniqueID])
-      card_section("Response Type: {{ output1 }}")
-      card_section("{{ output2 }}")
-    ])
+  row([
+    cell(class="st-module", [
+      row([
+        cell(class="st-br", style="padding:20px", [ 
+          Stipple.select(:resultSelect, options=:resultOption,)
+        ])
 
-  ]))
+        cell(class="st-br", style="padding:20px", [ 
+          imageview(
+                  src = :url,
+                  spinnercolor = "primary",
+                  spinnersize = "82px",
+                )
+        ])
+      ])
+    ])
+  ])
+  
+  ]
 end
 
 route("/") do
   model = @init()
   uniqueID = model.inputID[1:10]
-  page(model, ui(uniqueID), title="BiDRA") |> html
+  page(model, ui(uniqueID), title="BiDRA V2") |> html
 end
 
 route("/upload/:valID", method = POST) do
@@ -78,13 +143,17 @@ route("/upload/:valID", method = POST) do
 
 end
 
+route("/download/datasetExample", method = POST) do
+  example_files = pwd() * "/public/examples_10_experiments.csv"
+  HTTP.Response(200, ["Content-Type"=>"text/csv"], body=read(example_files))
+end
+
 route("/analysis/:valID", method=POST) do
   uniqueID = String(Genie.Requests.payload(:valID))
   select = Genie.Requests.payload(:selectedResponse)
 
   user_message = "Your experiments are currently being analyzed. Please do not reload nor close this page.\nOnce the process is completed, results will automatically be downloaded."
   user_message
-  sleep(10)
   
   ### BiDRA Analysis process
   ## Define ResponseType + reload dataset
