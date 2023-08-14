@@ -1,5 +1,6 @@
 using GenieFramework
 using HTTP
+using GenieCache
 @genietools
 
 include("util.jl")
@@ -21,20 +22,24 @@ const RESULTS_PATH = create_storage_dir("Analysis_Results")
   @in process = false
   @out inputID = getUniqueID()
 
-  @in select = "Ascending"
+  @out select = "Ascending"
   @out option = ["Ascending", "Descending"]
 
   @out output1 = ""
   @out output2 = ""
   @out load=false
 
-  @in resultSelect = "DR Curve Ascending"
-  @out resultOption = ["DR Curve Ascending", "DR Curve Descending", "DR Curve Incomplete", "DR Curve Unresponsive", "IC50 Ranks Probabilities", "Pairwise Comparison", "Informative Potentiel Flags"]
-  @out url = "img/dr_curve_ascending.png"
+  @in resultSelect = ""
+  @out resultOption = ["", "DR Curve Ascending", "DR Curve Descending", "DR Curve Incomplete", "DR Curve Unresponsive", "IC50 Ranks Probabilities", "Pairwise Comparison", "Informative Potential Flags"]
+  @out url = ""
+  @out description = readTXT("$(pwd())/public/descriptions/.txt")
   
 
   @onchange resultSelect begin
-    url = "img/" * lowercase(replace(resultSelect, " " => "_")) * ".png"
+    fn =  lowercase(replace(resultSelect, " " => "_"))
+    url = "img/$(fn).png"
+    description = readTXT("$(pwd())/public/descriptions/$(fn).txt")
+    @info description
   end
 
   @onbutton process begin
@@ -52,49 +57,70 @@ function ui(uniqueID)
       cell(class="st-module", [
         row([
           cell(class="st-br", style="padding:20px", [
-            h4("Upload your dataset")
+            h3("Analysis ID: $uniqueID")
+
+            h4("1. Upload your dataset")
             
             uploader(name="fileUpload", label="Upload Dataset (.csv)", accept=".csv", multiple=false, method="POST", url="/upload/$uniqueID", autoupload=true)
-      
-            p("You must upload a single CSV file. Your dataset must be seperated in three columns, in this order: (1) log10 Dose, (2) Normalized % responses, and (3) experiments IDs.")
-            
-            p("The IDs are specific to each DR experiments and should be specified even if you are analyzing a single experiment. The IDs are used to seperate your datasets by eperiments and to identify them in the various graphical representations returned.")
 
-            h4("Dataset example")
-
-            p("Here an example of a dataset that comprises 10 DR experiments with descending responses.")
-            StippleUI.form(action = "/download/datasetExample", method = "POST", [
-              btn("Download", type="submit", color="primary")
-            ])
-
-          ])
-
-          cell(class="st-br", style="padding:20px", [
             StippleUI.form(action = "/analysis/$uniqueID", method = "POST", [
-              h4("Select your response type")
+              h4("2. Select your response type")
 
               Stipple.select(:select, name="selectedResponse", options=:option,)
-
-              p("Ascending response: no response at small concentration and high response at large concentrations.(e.g. % of cell growth inhibition)")
-
-              p("Descending response: high response at small concentration and no response at small concentrations (e.g. % of cell survival)")
               
-              h4("Start the analysis process")
-              btn("Analyze", type="submit", color="green", @click(:process), disable=:load)
+              h4("3. Start the analysis process")
+              row([
+                cell(class="st", [
+                  btn("Analyze", type="submit", color="primary", @click(:process), disable=:load) 
+                  ])
+
+                cell(class="st", align="right", [
+                  StippleUI.form(action="/reload", [
+                    btn("New Analysis", type="submit", color="orange")
+                  ])
+                ])
+              ])
 
               h5("{{ output2 }}")
-              h4("{{ output3 }}")
             ])
+      
+            
+
           ])
 
           cell(class="st-br", style="padding:20px", [
-            h4("Analysis Information")
-            p("Unique ID: $uniqueID")
-            p("Response Type: {{ output1 }}")
-
-            StippleUI.form(action="/", [
-              btn("New Analysis", type="submit", color="orange")
+            h4("Dataset")
+            p("You must upload a single CSV file. Your dataset must be seperated in three columns, in this order: (1) log₁₀ Dose, (2) Normalized % responses, and (3) experiments IDs.")
+            p("The IDs are specific to each DR experiments and should be specified even if you are analyzing a single experiment. The IDs are used to seperate your datasets by eperiments and to identify them in the various graphical representations returned.")
+            p("Here an example of a dataset that comprises 10 DR experiments with descending responses.")
+            
+            row([
+              cell(align="center", [
+                StippleUI.form(action = "/download/datasetExample", method = "POST", [
+                btn("Download Dataset Example", type="submit", color="primary")
+                ])
+              ])
             ])
+
+            h4("Results")
+            p("Analysis results are automatically downloaded (.zip file) once the process is complete. Different figures are returned, depending on the number of experiments considered, as well as the complete posteriors values (.csv files) for each efficiency metric of every experiment.")
+            p("The returned figures are presented bellow.")
+            
+          ])
+
+          cell(class="st-br", style="padding:20px", [
+            h4("Response Types")
+            p("Ascending response: no response at small concentration and high response at large concentrations.(e.g. % of cell growth inhibition)")
+            p("Descending response: high response at small concentration and no response at small concentrations (e.g. % of cell survival)")
+
+            h4("Efficiency metrics inferred")
+            p("We used the four-paramter log-listic model to evaluate the dose-response relationship. The following four efficiency metrics are inferred and returned:
+              <br>1. LDR (Low-Dose Response): basal asymptotic response. The response type defines if this is the minimal or maximal response.
+              <br>2. HDR (High-Dose Response): asymptotic response in the pressence of high dose. The response type defines if this is the minimal or maximal response.
+              <br>3. IC₅₀: DR curve inflexion point or the log₁₀ dose needed to generate a response that is half of the HDR.
+              <br>4. Slope: DR curve slope around the IC₅₀")
+            p("We also infer a σ value that aims to quantify the variability of the experimental responses.")
+            p("Other efficiency metrics (e.g. AAC/AUC, DSS) can be derived from the returned posteriors.")
           ])
         ])
       ])
@@ -105,6 +131,8 @@ function ui(uniqueID)
       row([
         cell(class="st-br", style="padding:20px", [ 
           Stipple.select(:resultSelect, options=:resultOption,)
+
+          p("{{line}}", class="patate", @recur(:"line in description"))
         ])
 
         cell(class="st-br", style="padding:20px", [ 
@@ -117,14 +145,21 @@ function ui(uniqueID)
       ])
     ])
   ])
+
+  row([ ])
   
   ]
 end
 
 route("/") do
+  #GenieCache.purge()
   model = @init()
   uniqueID = model.inputID[1:10]
   page(model, ui(uniqueID), title="BiDRA V2") |> html
+end
+
+route("reload/") do 
+  Genie.Renderer.redirect("/")
 end
 
 route("/upload/:valID", method = POST) do
@@ -201,9 +236,9 @@ route("/analysis/:valID", method=POST) do
   dataset_metrics[!, :WAICₖ_model] = map(r -> r < 0 ? 1 : 2, dataset_metrics.ΔWAICₖ)
   dataset_metrics[!, :group] = dataset_metrics.WAICₖ_model .+ dataset_metrics.completeness .- 1
 
-  # Posterior informative potentiel
+  # Posterior informative potential
   plotGroupAssignation(dataset_metrics, ANALYSIS_PATH)
-  user_message *= "\n\n-> Post-inference analysis: posterior informative potentiel  "
+  user_message *= "\n\n-> Post-inference analysis: posterior informative potential  "
   user_message
 
   if N ≥ 3
@@ -232,7 +267,6 @@ route("/analysis/:valID", method=POST) do
   HTTP.Response(200, ["Content-Type"=>"application/zip"], body=read("$RESULTS_PATH/$fn"))
   #user_message *= "\n\nYou will be redirected to the main page."
   
-  #Genie.Renderer.redirect("/")
 end
 
 Genie.isrunning(:webserver) || up()

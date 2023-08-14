@@ -34,6 +34,13 @@ function readCSV(fn::String)
   return data
 end
 
+function readTXT(fn::String)
+  s = open(fn) do file
+    read(file, String)
+  end
+  return split(s, "\n") 
+end
+
 function getDataset(filePath::String, uniqueID::String)
   path = "$filePath/$uniqueID.csv"
   dataset = readCSV(path)

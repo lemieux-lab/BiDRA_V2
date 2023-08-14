@@ -1,0 +1,10 @@
+
+Ranking analysis is performed when the uploaded dataset contains three or more experiments.
+
+Given a set of N experiments, IC50 ranks posterior distributions are calculated for each experiment. The results are illustrated by a heatmap where the rows are individual experiments and the columns are ranks. The color of a cell is given by the probability (between 0 and 1) of an experiment's IC50 of being at a given rank. The probability is relative to the other exeriments of the dataset. In the returned heatmap, the experiment are sorted (starting from the top) ascendingly based on IC50 posterior's medians.
+
+For IC50, ranks are defined ascendingly: smallest IC50 is rank 1, and largest is rank N.
+
+IC50 and HDR posteriors are also represented in two heatmaps. Experiments are ordered as in the ranking heatmap.
+
+HDR ranking results are also returned, complemantary to the IC50 resuts. The ranking is done similarly. When the response type is "Ascending", HDRs are ranked descendingly (largest to smallest); when the response type is "Descending", HDRs are ranked ascendingly (smallest to largest).

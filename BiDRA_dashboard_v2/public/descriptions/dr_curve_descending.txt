@@ -1,0 +1,6 @@
+
+Experimental responses are illustrated by black dots. The inferred median dose-reponse curve is shown as a black continuous line. The shaded region is representative of the 95% confidence interval (CI) on the inferred median dose-response curve.
+HDR (green) is indicative of the minimal response, and LDR (blue) of the maximal response.
+Efficiency metrics' posterior distributions are represented as black histogram: their median response is depicted by a continuous colored line and their 95% CI by a shaded colored region.
+Values for the latters two metrics (median and CI bounds) are reported in the assossiated legend.
+The σ posterior is also depicted (pink).

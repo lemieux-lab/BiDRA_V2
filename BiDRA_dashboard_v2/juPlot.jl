@@ -113,7 +113,7 @@ function plotGroupAssignation(dataset_metrics::DataFrame, ANALYSIS_PATH::String)
     hidedecorations!(ax)
     hidespines!(ax)
 
-    fn = "informative_potentiel_posterior"*".pdf"
+    fn = "informative_potential_posterior"*".pdf"
     CairoMakie.save("$ANALYSIS_PATH/$fn", f)
 end
 

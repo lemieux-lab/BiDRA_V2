@@ -1,0 +1,10 @@
+
+Informative potential flags are a tool to evaluate the informative potentiel of each experiment posteriors. The flags are obtained by combining response completeness (response standard deviation) and evaluating how well the log-logistic model fit the response.
+
+Red flag : mostly flat response (very low response SD) that would better be represented by a line than the log-logistic model. For such experiment, the LDR should be equal to the HDR, and the IC50 and Slope metrics are not observed. The three latter posterior are thus very large and uncertain. Their median values should not be used as a reference. The LDR's median could be use to represent the basall response.
+
+Orange flag: incomplete response (response SD lower than 20) that are better represented by the log-logistic model. Depending on the incompleteness of the curve, the HDR, IC50 and Slope posteriors also tend to be uncertain. They, however, can be more precise than those with red flags. For instance, they can indicate that theses metrics are most likely above or below a certain values. Their median values should also not be used as a reference.
+
+Green flag: complete response (response SD above 20) that is well represented by the log-logistic model. All efficiency metrics are experimentally observed which results in more precise posterior distributions. Their median values with their corresponding confidence interval can be used as references.
+
+Informative potential have been calculated for each experiment and a flag was assigned to each of them. The returned figure depict that assignation: a colored flag for each experiment ID.

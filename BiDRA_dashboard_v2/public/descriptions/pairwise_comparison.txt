@@ -1,0 +1,6 @@
+
+Pairwise compmarison is performed when the uploaded dataset contains two experiments.
+
+The difference posterior is calculated for each efficiency metrics and represented by histograms. The shift of those histograms from the baseline 0 indicates if the two experiments differentiate for a given efficiency metrics. For each experiment, the probability of having a larger value for a given efficiency metrics compared to the other experiment is indicated in each plot.
+
+The quantile-to-quantile comparisons of the sorted posteriors for each efficiency metrics is also represented. The identity (x = y) diagnonal is also plotted to put the comparison in percepective.

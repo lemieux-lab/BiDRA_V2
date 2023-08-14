@@ -1,0 +1,9 @@
+
+BiDRA is able to infer DR curve and posterior regardless of curve completeness. 
+It is also robust to unresponsive or flat response, as it will not return extreme and unsupported values for the unobserved efficiency metric(s) (e.g. HDR, IC50). Instead, the posterior distributions of such metric will be quite large and thus uncertain. Their median values are not very informative. The bounds of the CI can demonstrate the certainty/uncertainty, as demosntrated by the (certain) LDR and (uncertain) HDR in the example figure.
+Furthermore, when a large proportion of the IC50 posterior is outside of experimental dose range, the latter is represented by two continuous black segments.
+Such experiment are described as having poorly informative posterior (red). Refer to "Informative Potential Flags" for further details regarding posterior informativeness.
+Experimental responses are illustrated by black dots. The inferred median dose-reponse curve is shown as a black continuous line. The shaded region is representative of the 95% confidence interval (CI) on the inferred median dose-response curve.
+Efficiency metrics' posterior distributions are represented as black histogram: their median response is depicted by a continuous colored line and their 95% CI by a shaded colored region.
+Values for the latters two metrics (median and CI bounds) are reported in the assossiated legend.
+The σ posterior is also depicted (pink).
