@@ -1,6 +1,6 @@
 using GenieFramework
+using Genie.Router
 using HTTP
-using GenieCache
 @genietools
 
 include("util.jl")
@@ -8,10 +8,13 @@ include("juPlot.jl")
 
 @appname BiDRA_V2
 
+#Genie.config.run_as_server = true
+#Genie.config.server_port = 8092
+#Genie.config.server_host = "0.0.0.0"
+
 Genie.config.cors_headers["Access-Control-Allow-Origin"]  =  "*"
 Genie.config.cors_headers["Access-Control-Allow-Headers"] = "Content-Type"
 Genie.config.cors_headers["Access-Control-Allow-Methods"] = "GET,POST,PUT,DELETE,OPTIONS"
-Genie.config.cors_allowed_origins = ["*"]
 
 const UPLOAD_PATH = create_storage_dir("Backend_Upload")
 const RESULTS_PATH = create_storage_dir("Analysis_Results")
@@ -32,13 +35,13 @@ const RESULTS_PATH = create_storage_dir("Analysis_Results")
   @in resultSelect = ""
   @out resultOption = ["", "DR Curve Ascending", "DR Curve Descending", "DR Curve Incomplete", "DR Curve Unresponsive", "IC50 Ranks Probabilities", "Pairwise Comparison", "Informative Potential Flags"]
   @out url = ""
-  @out description = readTXT("$(pwd())/public/descriptions/.txt")
+  @out description = readTXT("$(@__DIR__)/public/descriptions/.txt")
   
 
   @onchange resultSelect begin
     fn =  lowercase(replace(resultSelect, " " => "_"))
     url = "img/$(fn).png"
-    description = readTXT("$(pwd())/public/descriptions/$(fn).txt")
+    description = readTXT("$(@__DIR__)/public/descriptions/$(fn).txt")
     @info description
   end
 
@@ -51,7 +54,17 @@ end
 
 function ui(uniqueID)
   [
-    heading("BiDRA Dashboard")
+    row([
+      cell([
+        #heading("BiDRA Dashboard")
+        h1(class="text-center","Bayesian Inference for Dose-Response Analysis")
+        #h3(class="text-center", "- FOR -")
+        #h2(class="text-center", "Dose Response Analysis")
+        #<h5><br></h5>
+        h4(class="text-center", "VERSION 2.0")
+        #<h5><br><br></h5>
+      ])
+    ])
 
     row([
       cell(class="st-module", [
@@ -152,7 +165,6 @@ function ui(uniqueID)
 end
 
 route("/") do
-  #GenieCache.purge()
   model = @init()
   uniqueID = model.inputID[1:10]
   page(model, ui(uniqueID), title="BiDRA V2") |> html
@@ -269,4 +281,5 @@ route("/analysis/:valID", method=POST) do
   
 end
 
-Genie.isrunning(:webserver) || up()
+#Genie.isrunning(:webserver) || up()
+
